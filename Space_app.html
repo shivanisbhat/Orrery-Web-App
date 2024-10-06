@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Orrery Web App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/TrackballControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonld/0.3.15/jsonld.js"></script>
+    <!-- Add any other required CDN scripts here -->
+</head>
+<body>
+    <div>
+        <h1>Orrery Web App</h1>
+    </div>
+    <div>
+        <h2>Planets</h2>
+        <ul id="planets"></ul>
+    </div>
+    <div id="planetary_orbits"></div>
+    <table border='1'>
+        <caption>The spheres are animated by an orbital propagator using the following parameters.</caption>
+        <tr>
+            <th>Name</th>
+            <th>eccentricity</th>
+            <th>inclination</th>
+            <th>omega</th>
+            <th>period</th>
+            <th>raan</th>
+            <th>sma</th>
+            <th>tau</th>
+        </tr>
+        <tr><td id="r1c1">Mercury</td><td id="r1c2">0.20563</td><td id="r1c3">3.38</td><td id="r1c4">48.331</td><td id="r1c5">88.0</td><td id="r1c6">281.01</td><td id="r1c7">0.387098</td><td id="r1c8">29.124</td></tr>
+        <tr><td id="r2c1">Venus</td><td id="r2c2">0.006772</td><td id="r2c3">3.86</td><td id="r2c4">76.68</td><td id="r2c5">224.701</td><td id="r2c6">272.76</td><td id="r2c7">0.723332	</td><td id="r2c8">54.884</td></tr>
+        <tr><td id="r3c1">Earth</td><td id="r3c2">0.016708</td><td id="r3c3">7.155</td><td id="r3c4">-11.26064</td><td id="r3c5">365.25638</td><td id="r3c6">23.439281</td><td id="r3c7">1.0</td><td id="r3c8">114.20783</td></tr>
+        <tr><td id="r4c1">Mars</td><td id="r4c2">0.0934</td><td id="r4c3">5.65</td><td id="r4c4">49.558</td><td id="r4c5">686.971</td><td id="r4c6">317.68143</td><td id="r4c7">1.523679</td><td id="r4c8">286.502</td></tr>
+        <tr><td id="r5c1">Jupiter</td><td id="r5c2">0.0489</td><td id="r5c3">6.09</td><td id="r5c4">100.464</td><td id="r5c5">4332.59</td><td id="r5c6">268.057</td><td id="r5c7">5.2044</td><td id="r5c8">273.867</td></tr>
+        <tr><td id="r6c1">Saturn</td><td id="r6c2">0.0565</td><td id="r6c3">5.51</td><td id="r6c4">113.665</td><td id="r6c5">10759.22</td><td id="r6c6">40.589</td><td id="r6c7">9.5826</td><td id="r6c8">339.392</td></tr>
+        <tr><td id="r7c1">Uranus</td><td id="r7c2">0.046381</td><td id="r7c3">6.48</td><td id="r7c4">74.006</td><td id="r7c5">30688.5</td><td id="r7c6">257.311</td><td id="r7c7">19.2184</td><td id="r7c8">96.998856</td></tr>
+        <tr><td id="r8c1">Neptune</td><td id="r8c2">0.009456</td><td id="r8c3">6.43</td><td id="r8c4">131.784</td><td id="r8c5">60182.0</td><td id="r8c6">299.3</td><td id="r8c7">30.110388</td><td id="r8c8">276.336</td></tr>
+        <tr><td id="r9c1">Pluto</td><td id="r9c2">0.2488</td><td id="r9c3">11.88</td><td id="r9c4">110.299</td><td id="r9c5">90560.0</td><td id="r9c6">132.993</td><td id="r9c7">39.48</td><td id="r9c8">113.834</td></tr>
+    </table>
+
+    <!-- Embed the RGL widget content here -->
+    <div id="rglwidget">
+      <!-- RGL widget content -->
+    </div>
+    <script>
+      // RGL widget JavaScript
+      import * as THREE from 'three';
+    </script>
+    <script id="OrbitOntology" type="application/ld+json">
+    {
+        "@context": {
+            "HelioCentricOrbit": "http://www.semanticweb.org/rrovetto/ontologies/2014/ssao#Helio-Centric_Orbit",
+            "CelestialEntity": "http://www.w3.org/2002/07/owl#NamedIndividual",
+            "Name": "http://www.w3.org/2001/XMLSchema#Name",
+            "name": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_name",
+            "semiMajorAxis": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_Semi-major_Axis",
+            "eccentricity": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_orbital_eccentricity",
+            "inclination": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_orbital_inclination",
+            "meanAnomoly": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_Mean_Anomaly",
+            "argPerigee": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_Argument_of_Periapsis",
+            "sidereal": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_Eccentric_Anomaly",
+            "raan": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_RAAN",
+            "double": "http://www.w3.org/2001/XMLSchema#double",
+            "decimal": "http://www.w3.org/2001/XMLSchema#decimal",
+            "graph": "@graph",
+            "type": "@type",
+            "value": "@value"
+        }
+    }
+    {
+    "graph": [
+            {
+                @id: "http://www.semanticweb.org/daoneil/ontologies/2016/7/untitled-ontology-34",
+                "type": "http://www.w3.org/2002/07/owl#Ontology",
+                "http://www.w3.org/2002/07/owl#imports": {
+                    "@id": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology"
+                }
+            },
+            {
+                @id: "http://www.semanticweb.org/daoneil/ontologies/2016/7/untitled-ontology-34#Earth_Orbit",
+                "type": [
+                    "CelestialEntity",
+                    "HelioCentricOrbit"
+                ],
+                "argPerigee": {
+                    "type": "decimal",
+                    "value": "100.47"
+                },
+                "sidereal": {
+                    "type": "decimal",
+                    "value": "1"
+                },
+                "meanAnomoly": {
+                    "type": "decimal",
+                    "value": "100.47"
+                },
+                "raan": {
+                    "type": "decimal",
+                    "value": "-11.26064"
+                },
+                "semiMajorAxis": {
+                    "type": "decimal",
+                    "value": "1.00000011"
+                },
+                "name": {
+                    "type": "Name",
+                    "value": "Earth_Orbit"
+                },
+                "eccentricity": {
+                    "type": "decimal",
+                    "value": "0.01671022"
+                },
+                "inclination": {
+                    "type": "decimal",
+                    "value": "0.00005"
+                }
+            },
+            {
+                @id: "http://www.semanticweb.org/daoneil/ontologies/2016/7/untitled-ontology-34#Mars_Orbit",
+                "type": [
+                    "CelestialEntity",
+                    "HelioCentricOrbit"
+                ],
+                "argPerigee": {
+                    "type": "decimal",
+                    "value": "336.04084084"
+                },
+                "sidereal": {
+                    "type": "decimal",
+                    "value": "1.881"
+                },
+                "meanAnomoly": {
+                    "type": "decimal",
+                    "value": "355.43"
+                },
+                "raan": {
+                    "type": "decimal",
+                    "value": "49.57854"
+                },
+                "semiMajorAxis": {
+                    "type": "decimal",
+                    "value": "1.5236623"
+                },
+                "name": {
+                    "type": "Name",
+                    "value": "Mars_orbit"
+                },
+                "eccentricity": {
+                    "type": "decimal",
+                    "value": "0.09341233"
+                },
+                "inclination": {
+                    "type": "decimal",
+                    "value": "1.85061"
+                }
+            },
+            {
+                @id: "http://www.semanticweb.org/daoneil/ontologies/2016/7/untitled-ontology-34#Mercury_Orbit",
+                "type": [
+                    "CelestialEntity",
+                    "HelioCentricOrbit"
+                ],
+                "argPerigee": {
+                    "type": "decimal",
+                    "value": "77.46"
+                },
+                "sidereal": {
+                    "type": "decimal",
+                    "value": "0.240846"
+                },
+                "meanAnomoly": {
+                    "type": "decimal",
+                    "value": "252.25"
+                },
+                "raan": {
+                    "type": "decimal",
+                    "value": "48.33167"
+                },
+                "semiMajorAxis": {
+                    "type": "decimal",
+                    "value": "0.38709893"
+                },
+                "name": {
+                    "type": "Name",
+                    "value": "Mercury_Orbit"
+                },
+                "eccentricity": {
+                    "type": "decimal",
+                    "value": "0.20563069"
+                },
+                "inclination": {
+                    "type": "decimal",
+                    "value": "7.00487"
+                }
+            },
+            {
+                "type": [
+                    "CelestialEntity",
+                    "HelioCentricOrbit"
+                ],
+                "argPerigee": {
+                    "type": "decimal",
+                    "value": "131.77"
+                },
+                "sidereal": {
+                    "type": "decimal",
+                    "value": "0.615"
+                },
+                "meanAnomoly": {
+                    "type": "decimal",
+                    "value": "181.98"
+                },
+                "raan": {
+                    "type": "decimal",
+                    "value": "76.68069"
+                },
+                "semiMajorAxis": {
+                    "type": "decimal",
+                    "value": "0.72333199"
+                },
+                "name": {
+                    "type": "Name",
+                    "value": "Venus_Orbit"
+                },
+                "eccentricity": {
+                    "type": "decimal",
+                    "value": "0.00677323"
+                },
+                "inclination": {
+                    "type": "decimal",
+                    "value": "3.39471"
+                }
+            },
+            
+            {
+                "@id": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_Argument_of_Periapsis",
+                "http://www.semanticweb.org/rrovetto/ontologies/2014/ssao#Reference_Source": "http://farside.ph.utexas.edu/teaching/celestial/Celestial/node34.html"
+            },
+            {
+                "@id": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_Mean_Anomaly",
+                "http://www.semanticweb.org/rrovetto/ontologies/2014/ssao#Reference_Source": "http://farside.ph.utexas.edu/teaching/celestial/Celestial/node34.html",
+                "http://www.w3.org/2000/01/rdf-schema#comment": "Mean Anomoly at Epoch"
+            },
+            {
+                "@id": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_Semi-major_Axis",
+                "http://www.w3.org/2000/01/rdf-schema#comment": "Value in Astronomical Units"
+            },
+            {
+                "@id": "http://www.semanticweb.org/rrovetto/ontologies/2014/space-situational-awareness-ontology#has_orbital_inclination",
+                "http://www.semanticweb.org/rrovetto/ontologies/2014/ssao#Reference_Source": "http://www.met.rdg.ac.uk/~ross/Astronomy/Planets.html"
+            }
+        ]
+    }
+    </script>
+    <!-- Embed the RGL widget content here -->
+    <div id="rglwidget"></div>
+    
+    <script>
+        // Your JavaScript code to create the 3D scene and handle controls
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new TrackballControls(camera, renderer.domElement);
+        
+        // Create your planets and orbits here
+        const objNames = ["Earth_Orbit", "Mars_orbit", "Mercury_Orbit", "Venus_Orbit"];
+        const objSizes = [0.2, 0.17, 0.07, 0.2];
+        const objColors = [0x0066FF, 0xCC3333, 0xFF0000, 0xFFFFFF];
+
+        for (let i = 0; i < objNames.length; i++) {
+            const geometry = new THREE.SphereGeometry(objSizes[i], 16, 16);
+            const material = new THREE.MeshBasicMaterial({ color: objColors[i], wireframe: false });
+            const sphere = new THREE.Mesh(geometry, material);
+            sphere.name = objNames[i];
+            scene.add(sphere);
+        }
+
+        camera.position.z = 5;
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+
+        animate();
+    </script>
+</body>
+</html>
